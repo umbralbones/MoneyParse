@@ -1,0 +1,6 @@
+<h2>Dashboard</h2>
+<p>Welcome back, {{ user.email }}!</p>
+
+<p><a href="{% url 'transaction_list' %}">View Transactions</a></p>
+<p><a href="{% url 'add_transaction' %}">Add Transaction</a></p>
+<p><a href="{% url 'logout' %}">Logout</a></p>
