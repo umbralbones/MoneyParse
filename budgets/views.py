@@ -8,28 +8,34 @@ from django.contrib.auth.decorators import login_required
 
 @login_required
 def budgets(request):
-    budgets = Budget.objects.filter(user=request.user).order_by('-created_at')
-    return render(request, 'budgets/budgets.html', {'budgets': budgets})
+    qs = Budget.objects.filter(user=request.user).order_by('-created_at')
+    return render(request, 'budgets/budgets.html', {'budgets': qs})
+
+@login_required
 def budget_create(request):
     if request.method == 'POST':
-        form = BudgetForm(request.POST)
-        if form.is_valid():
-            # we need to save the Budget first so the formset can attach to it
-            budget = form.save()
-            formset = ItemFormSet(request.POST, instance=budget)
-            if formset.is_valid():
-                formset.save()
-                return redirect('budget_detail', pk=budget.pk)
-        else:
-            # if the Budget form failed, still bind the formset so errors show
-            formset = ItemFormSet(request.POST)
+        form    = BudgetForm(request.POST)
+        formset = ItemFormSet(request.POST)                # bind your items, too
+
+        if form.is_valid() and formset.is_valid():
+            # don’t save to DB yet — we need to attach the user
+            budget      = form.save(commit=False)
+            budget.user = request.user                      # ← set the owner
+            budget.save()
+
+            # now attach the items to that saved budget
+            formset.instance = budget
+            formset.save()
+
+            return redirect('budgets')  # or whatever your list‑view name is
+
     else:
-        form = BudgetForm()
-        # pass an empty “unsaved” Budget instance to generate blank item forms
-        formset = ItemFormSet(instance=Budget())
+        form    = BudgetForm()
+        # pass in an “unsaved” Budget so empty_form works
+        formset = ItemFormSet(instance=Budget(user=request.user))
 
     return render(request, 'budgets/budget_form.html', {
-        'form': form,
+        'form':    form,
         'formset': formset,
     })
 
