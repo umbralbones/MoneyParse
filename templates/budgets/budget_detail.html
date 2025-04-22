@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+
+  <h1>{{ budget.name }}</h1>
+  <p><strong>Description:</strong> {{ budget.description }}</p>
+  <p><strong>Total Budget:</strong> ${{ budget.total_amount }}</p>
+
+  <h2>Line Items</h2>
+  {% if budget.items.all %}
+    <ul>
+    {% for item in budget.items.all %}
+      <li>{{ item.name }} - ${{ item.amount }}</li>
+    {% endfor %}
+    </ul>
+  {% else %}
+    <p>No items yet.</p>
+  {% endif %}
+
+  <p>
+    <a href="{% url 'budget_edit' budget.pk %}">Edit</a>
+    |
+    <a href="{% url 'budget_create' %}">New Budget</a>
+  </p>
+
+{% endblock %}

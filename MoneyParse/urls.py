@@ -7,4 +7,5 @@ urlpatterns = [
     path('accounts/', include('django.contrib.auth.urls')),  # login/logout
     path('', include('core.urls')),  # landing page for MoneyParse
     path('transactions/', include('transactions.urls')),
+    path('budgets/', include('budgets.urls')),
 ]
