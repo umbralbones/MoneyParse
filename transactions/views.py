@@ -45,4 +45,3 @@ def delete_transaction(request, transaction_id):
         return redirect('transaction_list')
 
     return render(request, 'transactions/confirm_delete.html', {'transaction': transaction})
-
