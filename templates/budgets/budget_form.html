@@ -1,60 +1,171 @@
-{# budgets/templates/budgets/budget_form.html #}
 {% extends "base.html" %}
 
 {% block content %}
-<form method="post">
-  {% csrf_token %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <!-- Header -->
+                    <div class="d-flex align-items-center gap-3 mb-4">
+                        <div class="bg-primary bg-opacity-10 rounded p-3">
+                            <i class="bi bi-wallet2 text-primary fs-4"></i>
+                        </div>
+                        <div>
+                            <h1 class="h3 mb-1">{% if form.instance.pk %}Edit{% else %}Create{% endif %} Budget</h1>
+                            <p class="text-secondary mb-0">Set up your budget and add line items</p>
+                        </div>
+                    </div>
 
-  {{ form.as_p }}
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        <!-- Budget Details -->
+                        <div class="mb-4">
+                            <h5 class="mb-3">Budget Details</h5>
+                            {% for field in form %}
+                            <div class="mb-3">
+                                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                                {{ field.errors }}
+                                <input type="{% if field.name == 'amount' %}number{% else %}text{% endif %}" 
+                                       step="{% if field.name == 'amount' %}0.01{% endif %}"
+                                       name="{{ field.name }}" 
+                                       id="{{ field.id_for_label }}" 
+                                       value="{{ field.value|default:'' }}"
+                                       class="form-control{% if field.errors %} is-invalid{% endif %}"
+                                       {% if field.field.required %}required{% endif %}>
+                                {% if field.help_text %}
+                                    <div class="form-text">{{ field.help_text }}</div>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
 
-  <fieldset>
-    <legend>Line Items</legend>
-    {{ formset.management_form }}
+                        <!-- Line Items -->
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="mb-0">Line Items</h5>
+                                <button type="button" id="add-item" class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-plus-circle me-1"></i>Add Item
+                                </button>
+                            </div>
 
-    <table>
-      <thead>
-        <tr><th>Name</th><th>Amount</th><th>Delete?</th></tr>
-      </thead>
-      <tbody id="formset-body">
-        {% for item_form in formset.forms %}
-          <tr class="item-form">
-            <td>{{ item_form.name }}</td>
-            <td>{{ item_form.amount }}</td>
-            <td>{{ item_form.DELETE }}</td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+                            {{ formset.management_form }}
 
-    <button type="button" id="add-item">+ Add another</button>
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Amount</th>
+                                            <th class="text-end">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="formset-body">
+                                        {% for item_form in formset.forms %}
+                                        <tr class="item-form">
+                                            <td>
+                                                <input type="text" name="{{ item_form.name.html_name }}" 
+                                                       value="{{ item_form.name.value|default:'' }}" 
+                                                       class="form-control form-control-sm" 
+                                                       placeholder="Item name">
+                                            </td>
+                                            <td>
+                                                <input type="number" step="0.01" name="{{ item_form.amount.html_name }}" 
+                                                       value="{{ item_form.amount.value|default:'' }}" 
+                                                       class="form-control form-control-sm" 
+                                                       placeholder="0.00">
+                                            </td>
+                                            <td class="text-end">
+                                                <div class="form-check d-inline-block">
+                                                    <input type="checkbox" name="{{ item_form.DELETE.html_name }}" 
+                                                           class="form-check-input delete-item" 
+                                                           id="{{ item_form.DELETE.auto_id }}">
+                                                    <label class="form-check-label" for="{{ item_form.DELETE.auto_id }}">
+                                                        Delete
+                                                    </label>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
 
-    {# hidden template for a new blank form #}
-    <table style="display:none">
-      <tbody id="empty-form-template">
-        <tr class="item-form">
-          <td>{{ formset.empty_form.name }}</td>
-          <td>{{ formset.empty_form.amount }}</td>
-          <td>{{ formset.empty_form.DELETE }}</td>
-        </tr>
-      </tbody>
-    </table>
-  </fieldset>
+                            <!-- Hidden template for new items -->
+                            <template id="empty-form-template">
+                                <tr class="item-form">
+                                    <td>
+                                        <input type="text" name="{{ formset.empty_form.name.html_name }}" 
+                                               class="form-control form-control-sm" 
+                                               placeholder="Item name">
+                                    </td>
+                                    <td>
+                                        <input type="number" step="0.01" name="{{ formset.empty_form.amount.html_name }}" 
+                                               class="form-control form-control-sm" 
+                                               placeholder="0.00">
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="form-check d-inline-block">
+                                            <input type="checkbox" name="{{ formset.empty_form.DELETE.html_name }}" 
+                                                   class="form-check-input delete-item" 
+                                                   id="{{ formset.empty_form.DELETE.auto_id }}">
+                                            <label class="form-check-label" for="{{ formset.empty_form.DELETE.auto_id }}">
+                                                Delete
+                                            </label>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </template>
+                        </div>
 
-  <button type="submit">Save Budget</button>
-</form>
+                        <!-- Form Actions -->
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-1"></i>Save Budget
+                            </button>
+                            <a href="{% url 'budgets' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle me-1"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
     document.getElementById('add-item').addEventListener('click', function() {
-        const body        = document.getElementById('formset-body');
-        const template    = document.getElementById('empty-form-template').innerHTML;
-        const totalInput  = document.getElementById('id_{{ formset.prefix }}-TOTAL_FORMS');
-        const formCount   = parseInt(totalInput.value, 10);
-        const newRowHtml  = template.replace(/__prefix__/g, formCount);
-        body.insertAdjacentHTML('beforeend', newRowHtml);
+        const body = document.getElementById('formset-body');
+        const template = document.getElementById('empty-form-template').content.cloneNode(true);
+        const totalInput = document.getElementById('id_{{ formset.prefix }}-TOTAL_FORMS');
+        const formCount = parseInt(totalInput.value, 10);
+        
+        // Update form index
+        template.querySelectorAll('input').forEach(input => {
+            input.name = input.name.replace('__prefix__', formCount);
+            input.id = input.id?.replace('__prefix__', formCount);
+        });
+        
+        body.appendChild(template);
         totalInput.value = formCount + 1;
     });
-</script>    
-    
 
+    // Form validation
+    (function () {
+        'use strict'
+        var forms = document.querySelectorAll('.needs-validation')
+        Array.prototype.slice.call(forms).forEach(function (form) {
+            form.addEventListener('submit', function (event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    })();
+</script>
 
 {% endblock %}
