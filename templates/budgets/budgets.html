@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Your Budgets</title>
+</head>
+<body>
+
+  <h1>Budgets</h1>
+  <p>View and add budgets here</p>
+  <p><a href="{% url 'budget_create' %}">+ Add Budget</a></p>
+
+  {% if budgets %}
+    <ul>
+      {% for budget in budgets %}
+        <li>
+          <!-- link to the detail page -->
+          <a href="{% url 'budget_detail' budget.pk %}">
+            {{ budget.name }}
+          </a>
+          — ${{ budget.amount }}
+          {% if budget.created_at %}
+            <small>(created {{ budget.created_at|date:"M j, Y H:i" }})</small>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p><em>No budgets yet.</em></p>
+  {% endif %}
+  <p><a href="{% url 'dashboard' %}">Home</a></p>
+
+
+</body>
+</html>

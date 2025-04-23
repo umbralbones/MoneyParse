@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>MoneyParse</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 2rem;
+      text-align: center;
+    }
+    nav a {
+      margin: 0 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    {% if user.is_authenticated %}
+      <span>Welcome, {{ user.email }}</span>
+      <a href="{% url 'logout' %}">Logout</a>
+    {% else %}
+      <a href="{% url 'login' %}">Login</a>
+      <a href="{% url 'signup' %}">Sign Up</a>
+    {% endif %}
+  </nav>
+
+  <hr>
+
+  {% block content %}
+  {% endblock %}
+
+</body>
+</html>
