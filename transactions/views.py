@@ -1,5 +1,9 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Transaction
+<<<<<<< HEAD
+=======
+from django.utils.timezone import now
+>>>>>>> eec4dd1 (added budget page)
 from .forms import TransactionForm
 from django.contrib.auth.decorators import login_required
 
@@ -43,4 +47,9 @@ def delete_transaction(request, transaction_id):
         transaction.delete()
         return redirect('transaction_list')
 
+<<<<<<< HEAD
     return render(request, 'transactions/confirm_delete.html', {'transaction': transaction})
+=======
+    return render(request, 'transactions/confirm_delete.html', {'transaction': transaction})
+
+>>>>>>> eec4dd1 (added budget page)

@@ -1,0 +1,60 @@
+{# budgets/templates/budgets/budget_form.html #}
+{% extends "base.html" %}
+
+{% block content %}
+<form method="post">
+  {% csrf_token %}
+
+  {{ form.as_p }}
+
+  <fieldset>
+    <legend>Line Items</legend>
+    {{ formset.management_form }}
+
+    <table>
+      <thead>
+        <tr><th>Name</th><th>Amount</th><th>Delete?</th></tr>
+      </thead>
+      <tbody id="formset-body">
+        {% for item_form in formset.forms %}
+          <tr class="item-form">
+            <td>{{ item_form.name }}</td>
+            <td>{{ item_form.amount }}</td>
+            <td>{{ item_form.DELETE }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <button type="button" id="add-item">+ Add another</button>
+
+    {# hidden template for a new blank form #}
+    <table style="display:none">
+      <tbody id="empty-form-template">
+        <tr class="item-form">
+          <td>{{ formset.empty_form.name }}</td>
+          <td>{{ formset.empty_form.amount }}</td>
+          <td>{{ formset.empty_form.DELETE }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </fieldset>
+
+  <button type="submit">Save Budget</button>
+</form>
+
+<script>
+    document.getElementById('add-item').addEventListener('click', function() {
+        const body        = document.getElementById('formset-body');
+        const template    = document.getElementById('empty-form-template').innerHTML;
+        const totalInput  = document.getElementById('id_{{ formset.prefix }}-TOTAL_FORMS');
+        const formCount   = parseInt(totalInput.value, 10);
+        const newRowHtml  = template.replace(/__prefix__/g, formCount);
+        body.insertAdjacentHTML('beforeend', newRowHtml);
+        totalInput.value = formCount + 1;
+    });
+</script>    
+    
+
+
+{% endblock %}
