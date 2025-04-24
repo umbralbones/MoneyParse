@@ -7,6 +7,12 @@ class Transaction(models.Model):
     date = models.DateField()
     description = models.CharField(max_length=255, blank=True, null=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    class Meta:
+        indexes = [
+            models.Index(fields=['user', '-date']),
+            models.Index(fields=['date']),
+        ]
     TRANSACTION_TYPES = (
         ('income', 'Income'),
         ('expense', 'Expense'),
@@ -32,6 +38,8 @@ class Transaction(models.Model):
 
     def clean(self):
         from django.core.exceptions import ValidationError
+        if self.amount <= 0:
+            raise ValidationError('Amount must be positive')
         if self.transaction_type == 'expense' and not self.category:
             raise ValidationError('Category is required for expenses')
         if self.category and self.transaction_type != 'expense':

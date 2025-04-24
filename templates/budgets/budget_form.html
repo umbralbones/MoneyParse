@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block content %}
 <div class="container py-4">
@@ -6,93 +7,104 @@
         <div class="col-lg-8">
             <div class="card border-0 shadow-sm">
                 <div class="card-body p-4">
-                    <h2 class="h4 mb-4">{% if budget %}Edit{% else %}New{% endif %} Budget</h2>
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h1 class="h3 mb-0">{{ title }}</h1>
+                        <a href="{% if budget %}{% url 'budget_detail' budget.pk %}{% else %}{% url 'budget_list' %}{% endif %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-lg me-1"></i>Cancel
+                        </a>
+                    </div>
 
-                    <form method="post" class="needs-validation" novalidate>
+                    <form method="post" id="budgetForm" novalidate>
                         {% csrf_token %}
-                        
-                        <!-- Budget Details -->
-                        {% for field in form %}
-                        <div class="mb-3">
-                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-                            {{ field.errors }}
-                            <input type="{% if field.name == 'amount' %}number{% else %}text{% endif %}" 
-                                   step="{% if field.name == 'amount' %}0.01{% endif %}"
-                                   name="{{ field.name }}" 
-                                   id="{{ field.id_for_label }}" 
-                                   value="{{ field.value|default:'' }}"
-                                   class="form-control{% if field.errors %} is-invalid{% endif %}"
-                                   {% if field.field.required %}required{% endif %}>
-                        </div>
-                        {% endfor %}
 
-                        <!-- Line Items -->
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                        {% endif %}
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-8">
+                                <label for="{{ form.name.id_for_label }}" class="form-label">Budget Name</label>
+                                {{ form.name }}
+                                {% if form.name.errors %}
+                                <div class="invalid-feedback d-block">{{ form.name.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <label for="{{ form.amount.id_for_label }}" class="form-label">Total Amount</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    {{ form.amount }}
+                                </div>
+                                {% if form.amount.errors %}
+                                <div class="invalid-feedback d-block">{{ form.amount.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12">
+                                <label for="{{ form.description.id_for_label }}" class="form-label">Description (Optional)</label>
+                                {{ form.description }}
+                            </div>
+                        </div>
+
+                        <h5 class="mb-3">Budget Items</h5>
+                        {% if formset.non_form_errors %}
+                        <div class="alert alert-danger">
+                            {{ formset.non_form_errors }}
+                        </div>
+                        {% endif %}
+
+                        {{ formset.management_form }}
+                        <div id="items-formset">
+                            {% for form in formset %}
+                            <div class="item-form mb-3">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <div class="row g-3">
+                                            <div class="col-md-8">
+                                                <label class="form-label">Item Name</label>
+                                                {{ form.name }}
+                                                {% if form.name.errors %}
+                                                <div class="invalid-feedback d-block">{{ form.name.errors }}</div>
+                                                {% endif %}
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label">Amount</label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text">$</span>
+                                                    {{ form.amount }}
+                                                    {% if form.amount.errors %}
+                                                    <div class="invalid-feedback d-block">{{ form.amount.errors }}</div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% if formset.can_delete %}
+                                        <div class="mt-2 text-end">
+                                            <div class="form-check d-inline-block">
+                                                {{ form.DELETE }}
+                                                <label class="form-check-label text-danger" for="{{ form.DELETE.id_for_label }}">
+                                                    Delete this item
+                                                </label>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+
                         <div class="mb-4">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h5 class="mb-0">Items</h5>
-                                <button type="button" id="add-item" class="btn btn-sm btn-primary">
-                                    <i class="bi bi-plus"></i>
-                                </button>
-                            </div>
-
-                            {{ formset.management_form }}
-
-                            <div class="table-responsive">
-                                <table class="table align-middle mb-0">
-                                    <tbody id="formset-body">
-                                        {% for item_form in formset.forms %}
-                                        <tr class="item-form">
-                                            <td style="width: 45%">
-                                                <input type="text" name="{{ item_form.name.html_name }}" 
-                                                       value="{{ item_form.name.value|default:'' }}" 
-                                                       class="form-control form-control-sm" 
-                                                       placeholder="Item name">
-                                            </td>
-                                            <td style="width: 45%">
-                                                <input type="number" step="0.01" name="{{ item_form.amount.html_name }}" 
-                                                       value="{{ item_form.amount.value|default:'' }}" 
-                                                       class="form-control form-control-sm" 
-                                                       placeholder="0.00">
-                                            </td>
-                                            <td class="text-end" style="width: 10%">
-                                                <input type="hidden" name="{{ item_form.DELETE.html_name }}" value="" class="delete-flag">
-                                                <button type="button" class="btn btn-sm btn-link text-danger delete-item p-0">
-                                                    <i class="bi bi-x-lg"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            <!-- Hidden template for new items -->
-                            <template id="empty-form-template">
-                                <tr class="item-form">
-                                    <td style="width: 45%">
-                                        <input type="text" name="{{ formset.empty_form.name.html_name }}" 
-                                               class="form-control form-control-sm" 
-                                               placeholder="Item name">
-                                    </td>
-                                    <td style="width: 45%">
-                                        <input type="number" step="0.01" name="{{ formset.empty_form.amount.html_name }}" 
-                                               class="form-control form-control-sm" 
-                                               placeholder="0.00">
-                                    </td>
-                                    <td class="text-end" style="width: 10%">
-                                        <input type="hidden" name="{{ formset.empty_form.DELETE.html_name }}" value="" class="delete-flag">
-                                        <button type="button" class="btn btn-sm btn-link text-danger delete-item p-0">
-                                            <i class="bi bi-x-lg"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                            </template>
+                            <button type="button" class="btn btn-outline-primary" id="add-item">
+                                <i class="bi bi-plus-circle me-1"></i>Add Another Item
+                            </button>
                         </div>
 
-                        <!-- Form Actions -->
-                        <div class="d-flex gap-2 justify-content-end">
-                            <a href="{% if budget %}{% url 'budget_detail' budget.pk %}{% else %}{% url 'budgets' %}{% endif %}" class="btn btn-link">Cancel</a>
-                            <button type="submit" class="btn btn-primary">Save</button>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-1"></i>Save Budget
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -100,47 +112,36 @@
         </div>
     </div>
 </div>
+{% endblock %}
 
+{% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Add new item
-    document.getElementById('add-item').addEventListener('click', function() {
-        const body = document.getElementById('formset-body');
-        const template = document.getElementById('empty-form-template').content.cloneNode(true);
-        const totalInput = document.getElementById('id_{{ formset.prefix }}-TOTAL_FORMS');
-        const formCount = parseInt(totalInput.value, 10);
-        
-        // Update form index
-        template.querySelectorAll('input').forEach(input => {
-            if (input.name) {
-                input.name = input.name.replace('__prefix__', formCount);
-            }
+    const itemsFormset = document.getElementById('items-formset');
+    const addButton = document.getElementById('add-item');
+    const totalForms = document.getElementById('id_items-TOTAL_FORMS');
+
+    addButton.addEventListener('click', function() {
+        const forms = itemsFormset.getElementsByClassName('item-form');
+        const formCount = forms.length;
+        const newForm = forms[0].cloneNode(true);
+
+        newForm.innerHTML = newForm.innerHTML.replace(/(id_)?items-\d+/g, (match) => {
+            return match.replace(/\d+/, formCount);
         });
-        
-        body.appendChild(template);
-        totalInput.value = formCount + 1;
-        
-        // Add delete handler to the new row
-        const newRow = body.lastElementChild;
-        addDeleteHandler(newRow.querySelector('.delete-item'));
-        
-        // Focus the name input
-        newRow.querySelector('input[type="text"]').focus();
+
+        newForm.querySelectorAll('input[type="text"], input[type="number"]').forEach(input => {
+            input.value = '';
+        });
+
+        const deleteCheckbox = newForm.querySelector('input[type="checkbox"]');
+        if (deleteCheckbox) {
+            deleteCheckbox.checked = false;
+        }
+
+        itemsFormset.appendChild(newForm);
+        totalForms.value = formCount + 1;
     });
-    
-    // Delete item handler
-    function addDeleteHandler(button) {
-        button.addEventListener('click', function() {
-            const row = this.closest('tr');
-            const deleteFlag = row.querySelector('.delete-flag');
-            deleteFlag.value = 'on';
-            row.style.display = 'none';
-        });
-    }
-    
-    // Add delete handlers to existing items
-    document.querySelectorAll('.delete-item').forEach(addDeleteHandler);
 });
 </script>
-
 {% endblock %}
