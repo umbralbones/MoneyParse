@@ -5,7 +5,7 @@
     <div class="row mb-4">
         <div class="col">
             <div class="d-flex justify-content-between align-items-center">
-                <h1 class="h2">Your Transactions</h1>
+                <h2 class="h4 mb-0">Your Transactions</h2>
                 <a href="{% url 'add_transaction' %}" class="btn btn-primary">
                     <i class="bi bi-plus-circle me-2"></i>Add Transaction
                 </a>
@@ -14,51 +14,61 @@
     </div>
 
     <div class="row">
-        <div class="col">
+        <div class="col-12">
             <div class="card border-0 shadow-sm">
-                <div class="card-body">
+                <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-hover align-middle">
-                            <thead>
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
                                 <tr>
-                                    <th>Date</th>
-                                    <th>Description</th>
-                                    <th>Amount</th>
-                                    <th>Type</th>
-                                    <th>Actions</th>
+                                    <th class="border-0 ps-4">Date</th>
+                                    <th class="border-0">Category/Description</th>
+                                    <th class="border-0">Amount</th>
+                                    <th class="border-0">Type</th>
+                                    <th class="border-0 text-end pe-4">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for t in transactions %}
+                                {% for transaction in transactions %}
                                 <tr>
-                                    <td>{{ t.date|date:"M d, Y" }}</td>
-                                    <td>{{ t.description }}</td>
+                                    <td class="ps-4">{{ transaction.date }}</td>
                                     <td>
-                                        <span class="{% if t.transaction_type == 'income' %}text-success{% else %}text-danger{% endif %}">
-                                            ${{ t.amount|floatformat:2 }}
-                                        </span>
+                                        {% if transaction.transaction_type == 'expense' %}
+                                            <div class="d-flex flex-column">
+                                                <span class="fw-semibold">{{ transaction.get_category_display }}</span>
+                                                {% if transaction.description %}
+                                                    <small class="text-muted">{{ transaction.description }}</small>
+                                                {% endif %}
+                                            </div>
+                                        {% else %}
+                                            {{ transaction.description|default:"Income" }}
+                                        {% endif %}
+                                    </td>
+                                    <td class="fw-semibold {% if transaction.transaction_type == 'income' %}text-success{% else %}text-danger{% endif %}">
+                                        {% if transaction.transaction_type == 'income' %}+{% else %}-{% endif %}${{ transaction.amount }}
                                     </td>
                                     <td>
-                                        <span class="badge {% if t.transaction_type == 'income' %}bg-success{% else %}bg-danger{% endif %}">
-                                            {{ t.transaction_type|title }}
+                                        <span class="badge rounded-pill {% if transaction.transaction_type == 'income' %}bg-success-subtle text-success{% else %}bg-danger-subtle text-danger{% endif %}">
+                                            {{ transaction.transaction_type|title }}
                                         </span>
                                     </td>
-                                    <td>
-                                        <div class="btn-group">
-                                            <a href="{% url 'edit_transaction' t.id %}" class="btn btn-sm btn-outline-primary">
-                                                <i class="bi bi-pencil"></i>
-                                            </a>
-                                            <a href="{% url 'delete_transaction' t.id %}" class="btn btn-sm btn-outline-danger">
-                                                <i class="bi bi-trash"></i>
-                                            </a>
-                                        </div>
+                                    <td class="text-end pe-4">
+                                        <a href="{% url 'edit_transaction' transaction.id %}" class="btn btn-sm btn-outline-primary me-2">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <a href="{% url 'delete_transaction' transaction.id %}" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
                                     </td>
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="5" class="text-center py-4 text-muted">
-                                        <i class="bi bi-inbox h1 d-block mb-2"></i>
-                                        No transactions yet
+                                    <td colspan="5" class="text-center py-5">
+                                        <div class="text-muted">
+                                            <i class="bi bi-inbox fs-2 mb-3 d-block"></i>
+                                            <p class="mb-0">No transactions yet</p>
+                                            <small>Start by adding your first transaction</small>
+                                        </div>
                                     </td>
                                 </tr>
                                 {% endfor %}

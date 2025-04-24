@@ -1,7 +1,6 @@
 {% extends 'base.html' %}
 
 {% block content %}
-
 <div class="container py-4">
     <div class="row justify-content-center">
         <div class="col-md-8 col-lg-6">
@@ -10,28 +9,39 @@
                     <h2 class="card-title h4 mb-4">Add Transaction</h2>
                     <form method="post" class="needs-validation" novalidate>
                         {% csrf_token %}
-                        {% for field in form %}
                         <div class="mb-3">
-                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-                            {{ field.errors }}
-                            {% if field.name == 'transaction_type' %}
-                                <select name="{{ field.name }}" id="{{ field.id_for_label }}" class="form-select">
-                                    <option value="income">Income</option>
-                                    <option value="expense">Expense</option>
-                                </select>
-                            {% else %}
-                                <input type="{% if field.name == 'date' %}date{% elif field.name == 'amount' %}number{% else %}text{% endif %}" 
-                                       name="{{ field.name }}" 
-                                       id="{{ field.id_for_label }}" 
-                                       class="form-control{% if field.errors %} is-invalid{% endif %}" 
-                                       {% if field.name == 'amount' %}step="0.01"{% endif %}
-                                       value="{{ field.value|default:'' }}">
-                            {% endif %}
-                            {% if field.help_text %}
-                                <div class="form-text">{{ field.help_text }}</div>
-                            {% endif %}
+                            <label for="{{ form.date.id_for_label }}" class="form-label">Date</label>
+                            {{ form.date }}
+                            {{ form.date.errors }}
                         </div>
-                        {% endfor %}
+
+                        <div class="mb-3">
+                            <label for="{{ form.transaction_type.id_for_label }}" class="form-label">Type</label>
+                            {{ form.transaction_type }}
+                            {{ form.transaction_type.errors }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.amount.id_for_label }}" class="form-label">Amount</label>
+                            {{ form.amount }}
+                            {{ form.amount.errors }}
+                        </div>
+
+                        <div class="mb-3 category-field" style="display: none;">
+                            <label for="{{ form.category.id_for_label }}" class="form-label">Category</label>
+                            {{ form.category }}
+                            {{ form.category.errors }}
+                        </div>
+
+                        <div class="mb-3 description-field">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                            {{ form.description }}
+                            <div class="form-text description-help" style="display: none;">
+                                Description is required when category is Other
+                            </div>
+                            {{ form.description.errors }}
+                        </div>
+
                         <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                             <a href="{% url 'transaction_list' %}" class="btn btn-outline-secondary">Cancel</a>
                             <button type="submit" class="btn btn-primary">Save Transaction</button>
@@ -51,5 +61,38 @@
         box-shadow: 0 0 0 0.25rem rgba(37, 99, 235, 0.25);
     }
 </style>
+{% endblock %}
 
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const transactionTypeSelect = document.getElementById('{{ form.transaction_type.id_for_label }}');
+    const categoryField = document.querySelector('.category-field');
+    const categorySelect = document.getElementById('{{ form.category.id_for_label }}');
+    const descriptionField = document.querySelector('.description-field');
+    const descriptionHelp = document.querySelector('.description-help');
+
+    function updateFields() {
+        const isExpense = transactionTypeSelect.value === 'expense';
+        categoryField.style.display = isExpense ? 'block' : 'none';
+        
+        if (!isExpense) {
+            categorySelect.value = '';
+            descriptionHelp.style.display = 'none';
+        }
+    }
+
+    function updateDescriptionHelp() {
+        const isOther = categorySelect.value === 'other';
+        descriptionHelp.style.display = isOther ? 'block' : 'none';
+    }
+
+    transactionTypeSelect.addEventListener('change', updateFields);
+    categorySelect.addEventListener('change', updateDescriptionHelp);
+
+    // Initial state
+    updateFields();
+    updateDescriptionHelp();
+});
+</script>
 {% endblock %}

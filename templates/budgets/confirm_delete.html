@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h2 class="card-title h4 mb-4">Delete Budget</h2>
+                    <p class="text-danger">Are you sure you want to delete the budget "{{ budget.name }}"?</p>
+                    <p class="text-muted mb-4">This action cannot be undone.</p>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'budget_detail' budget.pk %}" class="btn btn-outline-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-danger">Delete Budget</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

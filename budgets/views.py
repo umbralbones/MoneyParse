@@ -1,9 +1,10 @@
 # budgets/views.py
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Budget
+from django.http import JsonResponse
+from .models import Budget, Item
 from .forms import BudgetForm, ItemFormSet
 from django.contrib.auth.decorators import login_required
-
+from django.views.decorators.http import require_POST
 
 
 @login_required
@@ -40,22 +41,24 @@ def budget_create(request):
     })
 
 
+@login_required
 def budget_edit(request, pk):
-    budget  = get_object_or_404(Budget, pk=pk)
+    budget = get_object_or_404(Budget, pk=pk, user=request.user)
     if request.method == 'POST':
-        form     = BudgetForm(request.POST, instance=budget)
-        formset  = ItemFormSet(request.POST, instance=budget)
+        form = BudgetForm(request.POST, instance=budget)
+        formset = ItemFormSet(request.POST, instance=budget)
         if form.is_valid() and formset.is_valid():
-            form.save()
+            budget = form.save()
             formset.save()
             return redirect('budget_detail', pk=budget.pk)
     else:
-        form     = BudgetForm(instance=budget)
-        formset  = ItemFormSet(instance=budget)
+        form = BudgetForm(instance=budget)
+        formset = ItemFormSet(instance=budget)
 
     return render(request, 'budgets/budget_form.html', {
         'form': form,
         'formset': formset,
+        'budget': budget
     })
 
 
@@ -67,3 +70,20 @@ def budget_detail(request, pk):
         'budget': budget
     })
 
+@login_required
+def budget_delete(request, pk):
+    budget = get_object_or_404(Budget, pk=pk, user=request.user)
+    if request.method == 'POST':
+        budget.delete()
+        return redirect('budgets')
+    return render(request, 'budgets/confirm_delete.html', {
+        'budget': budget
+    })
+
+@login_required
+@require_POST
+def item_delete(request, budget_pk, item_pk):
+    budget = get_object_or_404(Budget, pk=budget_pk, user=request.user)
+    item = get_object_or_404(Item, pk=item_pk, budget=budget)
+    item.delete()
+    return JsonResponse({'status': 'success'})
