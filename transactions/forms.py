@@ -18,7 +18,7 @@ class TransactionForm(forms.ModelForm):
         self.fields['description'].required = False
         self.fields['category'].required = False
 
-        # Add empty option for category
+        # Add empty option for category when first loading the form
         self.fields['category'].choices = [(None, '---------')] + list(Transaction.EXPENSE_CATEGORIES)
 
     def clean(self):
