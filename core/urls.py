@@ -3,5 +3,5 @@ from .views import landing_page, dashboard
 
 urlpatterns = [
     path('', landing_page, name='landing'),
-    path('dashboard/', dashboard, name='dashboard'),
+    path('dashboard/', dashboard, name='dashboard')
 ]
