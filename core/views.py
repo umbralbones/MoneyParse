@@ -4,6 +4,9 @@ from django.db.models import Sum, Q
 from django.utils import timezone
 from datetime import datetime
 from transactions.models import Transaction
+import requests
+from django.conf import settings
+import re
 
 @login_required
 def dashboard(request):
@@ -38,11 +41,60 @@ def dashboard(request):
         user=request.user
     ).order_by('-date')[:5]
 
+    # Initialize financial advice
+    financial_advice = ""
+
+    if request.method == "POST" and "refresh_advice" in request.POST:
+        # Check if there is enough data for advice
+        has_income = monthly_income > 0
+        has_expenses = monthly_expenses > 0
+        has_transactions = recent_transactions.exists() if hasattr(recent_transactions, 'exists') else len(recent_transactions) > 0
+
+        if has_income and has_expenses and has_transactions:
+            # Compose prompt
+            prompt = (
+                f"User's monthly income: {monthly_income}\n"
+                f"User's monthly expenses: {monthly_expenses}\n"
+                f"User's total balance: {total_balance}\n"
+                "Recent transactions:\n"
+            )
+            for t in recent_transactions:
+                prompt += f"- {t.date}: {t.transaction_type} {t.amount} ({getattr(t, 'category', 'N/A')})\n"
+            prompt += "\nProvide concise, personalized financial advice based on this data. Limit your response to 100 words. Don't format the response with bold or italic."
+
+            # Call Perplexity API
+            try:
+                response = requests.post(
+                    "https://api.perplexity.ai/chat/completions",
+                    headers={
+                        "Authorization": f"Bearer {settings.PERPLEXITY_API_KEY}",
+                        "Content-Type": "application/json"
+                    },
+                    json={
+                        "model": "sonar",
+                        "messages": [{"role": "user", "content": prompt}],
+                        "max_tokens": 500
+                    },
+                    timeout=10
+                )
+                if response.status_code == 200:
+                    raw_content = response.json()["choices"][0]["message"]["content"]
+                    # Remove citations
+                    cleaned_advice = re.sub(r"\[\d+\]", "", raw_content).strip()
+                    financial_advice = cleaned_advice
+                else:
+                    financial_advice = "Unable to retrieve advice at this time. Please try again later."
+            except Exception as e:
+                financial_advice = "Unable to retrieve advice at this time."
+        else:
+            financial_advice = "Add more transactions and budgets to receive personalized advice!"
+
     context = {
         'monthly_income': monthly_income,
         'monthly_expenses': monthly_expenses,
         'total_balance': total_balance,
         'recent_transactions': recent_transactions,
+        'financial_advice': financial_advice
     }
     return render(request, 'core/dashboard.html', context)
 
