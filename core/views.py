@@ -4,9 +4,9 @@ from django.db.models import Sum, Q
 from django.utils import timezone
 from datetime import datetime
 from transactions.models import Transaction
-import requests
+#import requests
 from django.conf import settings
-import re
+#import re
 
 @login_required
 def dashboard(request):
