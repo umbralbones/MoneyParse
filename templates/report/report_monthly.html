@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container py-4">
+  {% if total_exp > total_inc %}
+    <div class="alert alert-danger">
+      Warning: Your expenses ({{ total_exp }}) exceed your income ({{ total_inc }}) this month!
+    </div>
+  {% else %}
+    <div class="alert alert-success">
+      Nice job – your income ({{ total_inc }}) covers your expenses ({{ total_exp }}) this month.
+    </div>
+  {% endif %}
+
+  <canvas id="monthlyChart" width="400" height="200"></canvas>
+</div>
+
+<script>
+  const ctxM = document.getElementById('monthlyChart').getContext('2d');
+  new Chart(ctxM, {
+    type: 'line',
+    data: {
+      labels: {{ inc_labels|safe }},
+      datasets: [
+        { label: 'Income',  data: {{ inc_data|safe }},  borderWidth: 2, fill: false },
+        { label: 'Expenses',data: {{ exp_data|safe }},  borderWidth: 2, fill: false }
+      ]
+    },
+    options: { scales: { y: { beginAtZero: true } } }
+  });
+</script>
+<div class="container py-4">
+  <h3>Transactions This Month</h3>
+  <table class="table table-striped">
+    <thead class="table-dark">
+      <tr>
+        <th>Date</th>
+        <th>Description</th>
+        <th class="text-end">Amount</th>
+        <th>Type</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for tx in monthly_income_transactions %}
+        <tr>
+          <td>{{ tx.date|date:"M j, Y" }}</td>
+          <td>{{ tx.description }}</td>
+          <td class="text-end">+{{ tx.amount }}</td>
+          <td><span class="badge bg-success">Income</span></td>
+        </tr>
+      {% endfor %}
+
+      {% for tx in monthly_expense_transactions %}
+        <tr>
+          <td>{{ tx.date|date:"M j, Y" }}</td>
+          <td>{{ tx.description }}</td>
+          <td class="text-end">−{{ tx.amount }}</td>
+          <td><span class="badge bg-danger">Expense</span></td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+    
+{% endblock %}

@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container py-4">
+
+  <!-- Expenses vs Income Alert -->
+  {% if total_exp > total_inc %}
+    <div class="alert alert-danger">
+      Warning: Your expenses ({{ total_exp }}) exceed your income ({{ total_inc }}) this week!
+    </div>
+  {% else %}
+    <div class="alert alert-success">
+      Great! Your income ({{ total_inc }}) covers your expenses ({{ total_exp }}) this week.
+    </div>
+  {% endif %}
+
+  <!-- Chart canvas -->
+  <canvas id="weeklyChart" width="400" height="200"></canvas>
+</div>
+
+<script>
+  const ctx = document.getElementById('weeklyChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: {{ inc_labels|safe }},     // e.g. ['2025-04-20','2025-04-21',…]
+      datasets: [
+        {
+          label: 'Income',
+          data: {{ inc_data|safe }},     // [100, 50, 0, …]
+          borderWidth: 2,
+          fill: false
+        },
+        {
+          label: 'Expenses',
+          data: {{ exp_data|safe }},
+          borderWidth: 2,
+          fill: false
+        }
+      ]
+    },
+    options: {
+      scales: {
+        y: { beginAtZero: true }
+      }
+    }
+  });
+</script>
+<div class="container py-4">
+  <h3>Transactions This Week</h3>
+  <table class="table table-striped">
+    <thead class="table-dark">
+      <tr>
+        <th>Date</th>
+        <th>Description</th>
+        <th class="text-end">Amount</th>
+        <th>Type</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for tx in weekly_income_transactions %}
+        <tr>
+          <td>{{ tx.date|date:"M j, Y" }}</td>
+          <td>{{ tx.description }}</td>
+          <td class="text-end">+{{ tx.amount }}</td>
+          <td><span class="badge bg-success">Income</span></td>
+        </tr>
+      {% endfor %}
+
+      {% for tx in weekly_expense_transactions %}
+        <tr>
+          <td>{{ tx.date|date:"M j, Y" }}</td>
+          <td>{{ tx.description }}</td>
+          <td class="text-end">−{{ tx.amount }}</td>
+          <td><span class="badge bg-danger">Expense</span></td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}
