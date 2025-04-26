@@ -1,64 +1,107 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="container py-4">
-  {% if total_exp > total_inc %}
-    <div class="alert alert-danger">
-      Warning: Your expenses ({{ total_exp }}) exceed your income ({{ total_inc }}) this month!
+    <div class="container py-4" id="report-content">
+        {% if total_exp > total_inc %}
+            <div class="alert alert-danger">
+              Warning: Your expenses ({{ total_exp }}) exceed your income ({{ total_inc }}) this month!
+            </div>
+          {% else %}
+            <div class="alert alert-success">
+              Nice job – your income ({{ total_inc }}) covers your expenses ({{ total_exp }}) this month.
+            </div>
+          {% endif %}
+        
+        <canvas id="monthlyChart" width="400" height="200"></canvas>
+        <div class="container py-4">
+          <h3>Transactions This Month</h3>
+          <table class="table table-striped">
+            <thead class="table-dark">
+              <tr>
+                <th>Date</th>
+                <th>Description</th>
+                <th class="text-end">Amount</th>
+                <th>Type</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for tx in monthly_income_transactions %}
+                <tr>
+                  <td>{{ tx.date|date:"M j, Y" }}</td>
+                  <td>{{ tx.description }}</td>
+                  <td class="text-end">+{{ tx.amount }}</td>
+                  <td><span class="badge bg-success">Income</span></td>
+                </tr>
+              {% endfor %}
+        
+              {% for tx in monthly_expense_transactions %}
+                <tr>
+                  <td>{{ tx.date|date:"M j, Y" }}</td>
+                  <td>{{ tx.description }}</td>
+                  <td class="text-end">−{{ tx.amount }}</td>
+                  <td><span class="badge bg-danger">Expense</span></td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
     </div>
-  {% else %}
-    <div class="alert alert-success">
-      Nice job – your income ({{ total_inc }}) covers your expenses ({{ total_exp }}) this month.
-    </div>
-  {% endif %}
 
-  <canvas id="monthlyChart" width="400" height="200"></canvas>
-</div>
+    <script>
+      const ctxM = document.getElementById('monthlyChart').getContext('2d');
+      new Chart(ctxM, {
+        type: 'line',
+        data: {
+          labels: {{ inc_labels|safe }},
+          datasets: [
+            { label: 'Income',  data: {{ inc_data|safe }},  borderWidth: 2, fill: false },
+            { label: 'Expenses',data: {{ exp_data|safe }},  borderWidth: 2, fill: false }
+          ]
+        },
+        options: { scales: { y: { beginAtZero: true } } }
+      });
+    </script>
+</div>   
+    
+<div class="container mb-4">
+    <button id="downloadPdf" class="btn btn-primary">
+      Download PDF
+    </button>
+  </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"
+      integrity="sha512-8BMnEJ... (truncated for brevity) ..." crossorigin="anonymous" referrerpolicy="no-referrer">
+</script>
 
 <script>
-  const ctxM = document.getElementById('monthlyChart').getContext('2d');
-  new Chart(ctxM, {
-    type: 'line',
-    data: {
-      labels: {{ inc_labels|safe }},
-      datasets: [
-        { label: 'Income',  data: {{ inc_data|safe }},  borderWidth: 2, fill: false },
-        { label: 'Expenses',data: {{ exp_data|safe }},  borderWidth: 2, fill: false }
-      ]
-    },
-    options: { scales: { y: { beginAtZero: true } } }
-  });
+    document.getElementById('downloadPdf').addEventListener('click', () => {
+      const element = document.getElementById('report-content');
+      const w = 1500;
+      const h = 1500;
+    
+      html2pdf().set({
+        margin:    2,
+        filename:  'monthly_report.pdf',
+        image:     { type: 'jpeg', quality: 0.98 },
+        html2canvas: {
+          scale:        2,
+          useCORS:      true,
+          scrollX:      0,
+          scrollY:      0,
+          windowWidth:  w,
+          windowHeight: h
+        },
+        jsPDF: {
+          unit:   'px',
+          format: [ w, h ],
+          orientation: 'portrait'
+        },
+        pagebreak: { mode: ['css','legacy'] }
+      }).from(element).save();
+    });
 </script>
-<div class="container py-4">
-  <h3>Transactions This Month</h3>
-  <table class="table table-striped">
-    <thead class="table-dark">
-      <tr>
-        <th>Date</th>
-        <th>Description</th>
-        <th class="text-end">Amount</th>
-        <th>Type</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for tx in monthly_income_transactions %}
-        <tr>
-          <td>{{ tx.date|date:"M j, Y" }}</td>
-          <td>{{ tx.description }}</td>
-          <td class="text-end">+{{ tx.amount }}</td>
-          <td><span class="badge bg-success">Income</span></td>
-        </tr>
-      {% endfor %}
 
-      {% for tx in monthly_expense_transactions %}
-        <tr>
-          <td>{{ tx.date|date:"M j, Y" }}</td>
-          <td>{{ tx.description }}</td>
-          <td class="text-end">−{{ tx.amount }}</td>
-          <td><span class="badge bg-danger">Expense</span></td>
-        </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</div>
+
+
+
     
 {% endblock %}

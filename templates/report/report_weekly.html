@@ -1,9 +1,7 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="container py-4">
-
-  <!-- Expenses vs Income Alert -->
-  {% if total_exp > total_inc %}
+<div class="container py-4" id="report-content">
+    {% if total_exp > total_inc %}
     <div class="alert alert-danger">
       Warning: Your expenses ({{ total_exp }}) exceed your income ({{ total_inc }}) this week!
     </div>
@@ -12,9 +10,39 @@
       Great! Your income ({{ total_inc }}) covers your expenses ({{ total_exp }}) this week.
     </div>
   {% endif %}
-
-  <!-- Chart canvas -->
-  <canvas id="weeklyChart" width="400" height="200"></canvas>
+    <canvas id="weeklyChart" width="400" height="200"></canvas>
+    <div class="container py-4">
+      <h3>Transactions This Week</h3>
+      <table class="table table-striped">
+        <thead class="table-dark">
+          <tr>
+            <th>Date</th>
+            <th>Description</th>
+            <th class="text-end">Amount</th>
+            <th>Type</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for tx in weekly_income_transactions %}
+            <tr>
+              <td>{{ tx.date|date:"M j, Y" }}</td>
+              <td>{{ tx.description }}</td>
+              <td class="text-end">+{{ tx.amount }}</td>
+              <td><span class="badge bg-success">Income</span></td>
+            </tr>
+          {% endfor %}
+    
+          {% for tx in weekly_expense_transactions %}
+            <tr>
+              <td>{{ tx.date|date:"M j, Y" }}</td>
+              <td>{{ tx.description }}</td>
+              <td class="text-end">−{{ tx.amount }}</td>
+              <td><span class="badge bg-danger">Expense</span></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
 </div>
 
 <script>
@@ -22,11 +50,11 @@
   new Chart(ctx, {
     type: 'line',
     data: {
-      labels: {{ inc_labels|safe }},     // e.g. ['2025-04-20','2025-04-21',…]
+      labels: {{ inc_labels|safe }},
       datasets: [
         {
           label: 'Income',
-          data: {{ inc_data|safe }},     // [100, 50, 0, …]
+          data: {{ inc_data|safe }}, 
           borderWidth: 2,
           fill: false
         },
@@ -45,37 +73,42 @@
     }
   });
 </script>
-<div class="container py-4">
-  <h3>Transactions This Week</h3>
-  <table class="table table-striped">
-    <thead class="table-dark">
-      <tr>
-        <th>Date</th>
-        <th>Description</th>
-        <th class="text-end">Amount</th>
-        <th>Type</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for tx in weekly_income_transactions %}
-        <tr>
-          <td>{{ tx.date|date:"M j, Y" }}</td>
-          <td>{{ tx.description }}</td>
-          <td class="text-end">+{{ tx.amount }}</td>
-          <td><span class="badge bg-success">Income</span></td>
-        </tr>
-      {% endfor %}
 
-      {% for tx in weekly_expense_transactions %}
-        <tr>
-          <td>{{ tx.date|date:"M j, Y" }}</td>
-          <td>{{ tx.description }}</td>
-          <td class="text-end">−{{ tx.amount }}</td>
-          <td><span class="badge bg-danger">Expense</span></td>
-        </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</div>
+<div class="container mb-4">
+    <button id="downloadPdf" class="btn btn-primary">
+      Download PDF
+    </button>
+  </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"
+          integrity="sha512-8BMnEJ... (truncated for brevity) ..." crossorigin="anonymous" referrerpolicy="no-referrer">
+  </script>
+
+<script>
+    document.getElementById('downloadPdf').addEventListener('click', () => {
+      const element = document.getElementById('report-content');
+      const w = 1500;
+      const h = 1500;
+    
+      html2pdf().set({
+        margin:    2,
+        filename:  'weekly_report.pdf',
+        image:     { type: 'jpeg', quality: 0.98 },
+        html2canvas: {
+          scale:        2,
+          useCORS:      true,
+          scrollX:      0,
+          scrollY:      0,
+          windowWidth:  w,
+          windowHeight: h
+        },
+        jsPDF: {
+          unit:   'px',
+          format: [ w, h ], 
+          orientation: 'portrait'
+        },
+        pagebreak: { mode: ['css','legacy'] }
+      }).from(element).save();
+    });
+</script>
 {% endblock %}

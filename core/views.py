@@ -10,11 +10,9 @@ import re
 
 @login_required
 def dashboard(request):
-    # Get current month's start and end dates
     today = timezone.now()
     month_start = today.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     
-    # Get user's transactions
     monthly_income = Transaction.objects.filter(
         user=request.user,
         transaction_type='income',
@@ -36,22 +34,18 @@ def dashboard(request):
                 Sum('amount', filter=Q(transaction_type='expense'))
     )['balance'] or 0
 
-    # Get recent transactions
     recent_transactions = Transaction.objects.filter(
         user=request.user
     ).order_by('-date')[:5]
 
-    # Initialize financial advice
     financial_advice = ""
 
     if request.method == "POST" and "refresh_advice" in request.POST:
-        # Check if there is enough data for advice
         has_income = monthly_income > 0
         has_expenses = monthly_expenses > 0
         has_transactions = recent_transactions.exists() if hasattr(recent_transactions, 'exists') else len(recent_transactions) > 0
 
         if has_income and has_expenses and has_transactions:
-            # Compose prompt
             prompt = (
                 f"User's monthly income: {monthly_income}\n"
                 f"User's monthly expenses: {monthly_expenses}\n"
@@ -62,7 +56,6 @@ def dashboard(request):
                 prompt += f"- {t.date}: {t.transaction_type} {t.amount} ({getattr(t, 'category', 'N/A')})\n"
             prompt += "\nProvide concise, personalized financial advice based on this data. Limit your response to 100 words. Don't format the response with bold or italic."
 
-            # Call Perplexity API
             try:
                 response = requests.post(
                     "https://api.perplexity.ai/chat/completions",
@@ -79,7 +72,6 @@ def dashboard(request):
                 )
                 if response.status_code == 200:
                     raw_content = response.json()["choices"][0]["message"]["content"]
-                    # Remove citations
                     cleaned_advice = re.sub(r"\[\d+\]", "", raw_content).strip()
                     financial_advice = cleaned_advice
                 else:
