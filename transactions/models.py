@@ -34,7 +34,7 @@ class Transaction(models.Model):
     category = models.CharField(max_length=20, choices=EXPENSE_CATEGORIES, blank=True, null=True)
 
     def __str__(self):
-        return f"{self.user.username} - {self.transaction_type} - ${self.amount}"
+        return f"{self.user} - {self.transaction_type} - ${self.amount}"
 
     def clean(self):
         from django.core.exceptions import ValidationError
