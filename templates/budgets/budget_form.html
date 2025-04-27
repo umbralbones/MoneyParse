@@ -58,6 +58,9 @@
                         <div id="items-formset">
                             {% for form in formset %}
                             <div class="item-form mb-3">
+                                {% for hidden in form.hidden_fields %}
+                                    {{ hidden }}
+                                {% endfor %}
                                 <div class="card">
                                     <div class="card-body">
                                         <div class="row g-3">
@@ -122,25 +125,28 @@ document.addEventListener('DOMContentLoaded', function() {
     const totalForms = document.getElementById('id_items-TOTAL_FORMS');
 
     addButton.addEventListener('click', function() {
-        const forms = itemsFormset.getElementsByClassName('item-form');
-        const formCount = forms.length;
-        const newForm = forms[0].cloneNode(true);
-
-        newForm.innerHTML = newForm.innerHTML.replace(/(id_)?items-\d+/g, (match) => {
-            return match.replace(/\d+/, formCount);
-        });
-
-        newForm.querySelectorAll('input[type="text"], input[type="number"]').forEach(input => {
-            input.value = '';
-        });
-
-        const deleteCheckbox = newForm.querySelector('input[type="checkbox"]');
-        if (deleteCheckbox) {
-            deleteCheckbox.checked = false;
-        }
-
-        itemsFormset.appendChild(newForm);
-        totalForms.value = formCount + 1;
+      const forms     = itemsFormset.getElementsByClassName('item-form');
+      const formCount = forms.length;
+      const newForm   = forms[0].cloneNode(true);
+    
+      // re-index names & ids
+      newForm.innerHTML = newForm.innerHTML.replace(/(id_)?items-\d+/g, m =>
+        m.replace(/\d+/, formCount)
+      );
+    
+      // clear out any user input
+      newForm.querySelectorAll('input[type="text"], input[type="number"]').forEach(i => i.value = '');
+    
+      // clear the hidden id so Django knows this is a NEW object
+      const idInput = newForm.querySelector('input[type="hidden"][name$="-id"]');
+      if (idInput) idInput.value = '';
+    
+      // un-check “delete”
+      const deleteCheckbox = newForm.querySelector('input[type="checkbox"]');
+      if (deleteCheckbox) deleteCheckbox.checked = false;
+    
+      itemsFormset.appendChild(newForm);
+      totalForms.value = formCount + 1;
     });
 });
 </script>

@@ -65,9 +65,8 @@ class BaseBudgetItemFormSet(BaseInlineFormSet):
         if not valid_forms:
             raise ValidationError('At least one budget item is required.')
 
-        total = sum(form.cleaned_data.get('amount', 0) for form in valid_forms)
-        budget_amount = self.instance.amount if self.instance.pk else \
-                       self.data.get(f'{self.prefix}-0-amount', 0)
+        total = sum(f.cleaned_data.get('amount', 0) for f in valid_forms)
+        budget_amount = self.instance.amount
 
         try:
             budget_amount = Decimal(str(budget_amount))

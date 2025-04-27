@@ -17,7 +17,7 @@ SECRET_KEY = 'django-insecure-(l_g^gd7%ye^g0%keq4vam*=h=ms54i^n@qngztcy#fl3xf9q9
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['armin3moneyparce.pythonanywhere.com', '127.0.0.1']
 
 # Authentication settings
 AUTH_USER_MODEL = 'accounts.CustomUser'
@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'accounts',
     'budgets',
     'core',
+    'report'
 ]
 
 MIDDLEWARE = [
