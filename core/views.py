@@ -83,11 +83,11 @@ def dashboard(request):
                     cleaned_advice = re.sub(r"\[\d+\]", "", raw_content).strip()
                     financial_advice = cleaned_advice
                 else:
-                    financial_advice = "Unable to retrieve advice at this time. Please try again later."
+                    financial_advice = f"Unable to retrieve advice at this time. Got error: {str(response.json())}"
             except Exception as e:
-                financial_advice = "Unable to retrieve advice at this time."
+                financial_advice = f"Unable to retrieve advice at this time. Got error: {str(e)}"
         else:
-            financial_advice = "Add more transactions and budgets to receive personalized advice!"
+            financial_advice = "Add more transactions and budgets to receive personalized advice!"ce = "Add more transactions and budgets to receive personalized advice!"
 
     context = {
         'monthly_income': monthly_income,
