@@ -18,7 +18,6 @@ class TransactionForm(forms.ModelForm):
         self.fields['description'].required = False
         self.fields['category'].required = False
 
-        # Add empty option for category when first loading the form
         self.fields['category'].choices = [(None, '---------')] + list(Transaction.EXPENSE_CATEGORIES)
 
     def clean(self):
@@ -33,7 +32,6 @@ class TransactionForm(forms.ModelForm):
             elif category == 'other' and not description:
                 self.add_error('description', 'Description is required when category is Other')
         elif category:
-            # Clear category if not an expense
             cleaned_data['category'] = None
 
         return cleaned_data

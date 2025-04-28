@@ -129,19 +129,15 @@ document.addEventListener('DOMContentLoaded', function() {
       const formCount = forms.length;
       const newForm   = forms[0].cloneNode(true);
     
-      // re-index names & ids
       newForm.innerHTML = newForm.innerHTML.replace(/(id_)?items-\d+/g, m =>
         m.replace(/\d+/, formCount)
       );
     
-      // clear out any user input
       newForm.querySelectorAll('input[type="text"], input[type="number"]').forEach(i => i.value = '');
     
-      // clear the hidden id so Django knows this is a NEW object
       const idInput = newForm.querySelector('input[type="hidden"][name$="-id"]');
       if (idInput) idInput.value = '';
     
-      // un-check “delete”
       const deleteCheckbox = newForm.querySelector('input[type="checkbox"]');
       if (deleteCheckbox) deleteCheckbox.checked = false;
     
